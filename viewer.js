@@ -63,13 +63,13 @@
     $('controls').hidden = false;
     $('controls').dir = rtl ? 'rtl' : 'ltr';
 
-    $('stage').style.overflow = 'hidden';
-    var ratio = out.width / out.height;
+        var ratio = out.width / out.height;
     function fit() {
+      // הספר מתאים לרוחב המסך (לא לגובה), כדי שהטקסט יהיה גדול וחד; המסך גולל אנכית
       var st = $('stage');
-      var w = st.clientWidth - 16, h = st.clientHeight - 16;
-      var portrait = w < h * 0.9 || w < 640;
-      var pageW = Math.min(portrait ? w : w / 2, h * ratio);
+      var w = st.clientWidth - 16;
+      var portrait = w < 700;
+      var pageW = portrait ? w : Math.min(w / 2, 1100);
       var pageH = pageW / ratio;
       book.style.width = (portrait ? pageW : pageW * 2) + 'px';
       book.style.height = pageH + 'px';
@@ -78,7 +78,7 @@
 
     var flip = new St.PageFlip(book, {
       width: out.width, height: out.height,
-      size: 'stretch', minWidth: 200, maxWidth: 1400, minHeight: 280, maxHeight: 2000,
+      size: 'stretch', minWidth: 200, maxWidth: 1600, minHeight: 280, maxHeight: 3200,
       showCover: true, usePortrait: true, mobileScrollSupport: false,
       drawShadow: true, maxShadowOpacity: 0.45, flippingTime: 800,
       startPage: rtl ? n - 1 : 0, autoSize: true
