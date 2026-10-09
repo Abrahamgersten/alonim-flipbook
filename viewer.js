@@ -103,6 +103,7 @@
     $('nextBtn').onclick = forward;
     $('prevBtn').onclick = backward;
     document.addEventListener('keydown', function (e) {
+      if (!$('reader').hidden) return;
       if (e.key === 'ArrowLeft') { rtl ? forward() : backward(); }
       if (e.key === 'ArrowRight') { rtl ? backward() : forward(); }
     });
@@ -110,6 +111,38 @@
       if (document.fullscreenElement) document.exitFullscreen();
       else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
     };
+    // קריאה בהגדלה: העמוד/ים הנוכחיים ברזולוציה מלאה, עם זום וגלילה
+    var zoom = 1;
+    function visible() {
+      var i = flip.getCurrentPageIndex();
+      var single = flip.getOrientation() === 'portrait' || i === 0 || i === n - 1;
+      return single ? [i] : [i, i + 1];
+    }
+    function renderReader() {
+      var idx = visible().filter(function (k) { return ordered[k] && ordered[k].indexOf('data:') !== 0; });
+      var sc = $('rScroll');
+      var base = Math.min(sc.clientWidth - 16, 1000 * idx.length) / idx.length;
+      var box = $('rPages'); box.innerHTML = '';
+      idx.forEach(function (k) {
+        var im = new Image(); im.src = ordered[k]; im.alt = 'עמוד'; im.style.width = Math.round(base * zoom) + 'px'; box.appendChild(im);
+      });
+      $('rZoom').textContent = Math.round(zoom * 100) + '%';
+      $('rInfo').textContent = $('pageInfo').textContent;
+    }
+    function go(fwd) {
+      var next = rtl ? !fwd : fwd;
+      next ? flip.turnToNextPage() : flip.turnToPrevPage();
+      label(); renderReader(); $('rScroll').scrollTo(0, 0);
+    }
+    function setZoom(z) { zoom = Math.max(1, Math.min(3, z)); renderReader(); }
+    $('zoomBtn').onclick = function () { zoom = 1; $('reader').hidden = false; label(); renderReader(); $('rClose').focus(); };
+    $('rClose').onclick = function () { $('reader').hidden = true; $('zoomBtn').focus(); };
+    $('rPlus').onclick = function () { setZoom(zoom + 0.5); };
+    $('rMinus').onclick = function () { setZoom(zoom - 0.5); };
+    $('rNext').onclick = function () { go(true); };
+    $('rPrev').onclick = function () { go(false); };
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('reader').hidden) $('rClose').onclick(); });
+    window.addEventListener('resize', function () { if (!$('reader').hidden) renderReader(); });
     var t;
     window.addEventListener('resize', function () {
       clearTimeout(t);

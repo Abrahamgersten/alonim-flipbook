@@ -35,6 +35,17 @@ body.viewer {
 #pageInfo { min-width: 150px; text-align: center; font-size: 1rem; }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
 
+/* קריאה בהגדלה */
+#reader { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; background: #12181f; color: var(--ink); }
+#reader[hidden] { display: none; }
+.rbar { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 8px 10px; background: #1f2a37; flex-wrap: wrap; }
+.rbar button { min-width: 44px; height: 44px; border-radius: 22px; border: 0; background: var(--accent); color: #222; font-size: 1.4rem; line-height: 1; padding: 0 12px; }
+.rbar button.txt { font-size: 1rem; background: rgba(255,255,255,.14); color: var(--ink); }
+.rbar span { min-width: 64px; text-align: center; }
+#rScroll { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; }
+#rPages { display: flex; flex-direction: row; direction: ltr; justify-content: center; width: max-content; min-width: 100%; gap: 6px; padding: 8px; margin: 0 auto; }
+#rPages img { display: block; height: auto; background: #fff; flex: none; }
+
 /* ניהול */
 body.admin { background: #f3efe7; color: #222; padding: 16px; }
 .wrap { max-width: 760px; margin: 0 auto; }

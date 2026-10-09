@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>עלון</title>
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body class="viewer">
 <header class="bar">
@@ -22,11 +22,24 @@
   <button id="prevBtn" aria-label="לעמוד הקודם">›</button>
   <span id="pageInfo" aria-live="polite"></span>
   <button id="nextBtn" aria-label="לעמוד הבא">‹</button>
+  <button id="zoomBtn" aria-label="הגדלה לקריאה" class="ghost">🔍</button>
   <button id="fsBtn" aria-label="מסך מלא" class="ghost">⛶</button>
 </footer>
+<div id="reader" hidden role="dialog" aria-label="קריאה בהגדלה">
+  <div class="rbar">
+    <button id="rClose" class="txt">סגירה ✕</button>
+    <button id="rPrev" aria-label="לעמוד הקודם">›</button>
+    <span id="rInfo"></span>
+    <button id="rNext" aria-label="לעמוד הבא">‹</button>
+    <button id="rMinus" aria-label="הקטנה">−</button>
+    <span id="rZoom">100%</span>
+    <button id="rPlus" aria-label="הגדלה">+</button>
+  </div>
+  <div id="rScroll"><div id="rPages"></div></div>
+</div>
 <script src="vendor/pdf.min.js"></script>
 <script src="vendor/page-flip.browser.js"></script>
 <script src="pages.js?v=3"></script>
-<script src="viewer.js?v=3"></script>
+<script src="viewer.js?v=4"></script>
 </body>
 </html>
