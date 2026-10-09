@@ -3,7 +3,7 @@
 // סדר העלון השוכב לכל זוג דפים A (עליון) ו-B (תחתון): A שמאל, B ימין, B שמאל, A ימין.
 (function () {
   pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('vendor/pdf.worker.min.js', document.baseURI).href;
-  var MAX_H = 1600;
+  var MAX_H = 1500;
 
   function toBlob(canvas) {
     return new Promise(function (res) { canvas.toBlob(res, 'image/jpeg', 0.88); });
@@ -63,6 +63,7 @@
       im.src = URL.createObjectURL(first0);
     });
     return {
+      blobs: blobs,
       urls: blobs.map(function (b) { return URL.createObjectURL(b); }),
       width: dim.w, height: dim.h, split: split, sheets: pdf.numPages
     };

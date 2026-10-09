@@ -24,14 +24,28 @@
     $('title').textContent = info.name;
 
     var rtl = info.dir !== 'ltr';
-    var pdfUrl = 'pdfs/' + info.pdf + '?v=' + encodeURIComponent(info.updated || '');
     $('statusText').textContent = 'מכין את העלון לדפדוף…';
     var out;
     try {
-      out = await renderPdfPages({ url: pdfUrl }, {
-        mode: info.mode || 'auto',
-        onProgress: function (n, total) { $('progressBar').style.width = Math.round(n / total * 100) + '%'; }
-      });
+      if (info.images) {
+        // עמודים מוכנים מראש (מהר). שמירה במטמון הדפדפן לפי גרסה.
+        var urls = info.images.map(function (f) { return 'issues/' + info.folder + '/' + f; });
+        var done = 0;
+        await Promise.all(urls.map(function (u) {
+          return new Promise(function (res, rej) {
+            var im = new Image();
+            im.onload = function () { done++; $('progressBar').style.width = Math.round(done / urls.length * 100) + '%'; res(); };
+            im.onerror = function () { rej(new Error('img ' + u)); };
+            im.src = u;
+          });
+        }));
+        out = { urls: urls, width: info.width, height: info.height };
+      } else {
+        out = await renderPdfPages({ url: 'pdfs/' + info.pdf + '?v=' + encodeURIComponent(info.updated || '') }, {
+          mode: info.mode || 'auto',
+          onProgress: function (n, total) { $('progressBar').style.width = Math.round(n / total * 100) + '%'; }
+        });
+      }
     } catch (e) {
       console.error(e);
       return fail('לא הצלחנו לטעון את קובץ העלון. נסו לרענן, ואם זה לא עוזר בקשו קישור מעודכן.');

@@ -45,6 +45,17 @@
     return gh(path, { method: 'DELETE', body: { message: message, sha: sha, branch: BRANCH } });
   }
 
+  // מוחק את קבצי העלון הקודם (תיקיית תמונות, או PDF בפורמט הישן)
+  async function removeIssue(x) {
+    if (x.folder) {
+      var files = await gh('issues/' + x.folder);
+      for (var i = 0; i < (files || []).length; i++) await del('issues/' + x.folder + '/' + files[i].name, files[i].sha, 'remove old page');
+    } else if (x.pdf) {
+      var p = await gh('pdfs/' + x.pdf);
+      if (p) await del('pdfs/' + x.pdf, p.sha, 'remove old pdf');
+    }
+  }
+
   async function loadSchools() {
     schools = {};
     var dir = await gh('data');
@@ -89,8 +100,7 @@
         try {
           var j = await gh('data/' + s + '.json');
           await del('data/' + s + '.json', j.sha, 'delete ' + s);
-          var p = await gh('pdfs/' + x.pdf);
-          if (p) await del('pdfs/' + x.pdf, p.sha, 'delete pdf ' + s);
+          await removeIssue(x);
         } catch (e) { say(String(e), true); }
         loadSchools();
       });
@@ -124,24 +134,32 @@
       say('מעלה את הקובץ…');
       var slug = existing ? existing.slug : newSlug();
       var stamp = Date.now();
-      var pdfName = slug + '-' + stamp + '.pdf';
-      await put('pdfs/' + pdfName, b64FromBuffer(await file.arrayBuffer()), 'pdf ' + slug);
-      var info = { name: name, mode: $('mode').value, dir: $('dir').value, pdf: pdfName, updated: new Date(stamp).toISOString() };
+      var folder = slug + '-' + stamp;
+      say('מפרק את ה-PDF לעמודים…');
+      var out = await renderPdfPages({ data: new Uint8Array(await file.arrayBuffer()) }, {
+        mode: $('mode').value,
+        onProgress: function (n, t) { say('מפרק את ה-PDF לעמודים… ' + n + '/' + t); }
+      });
+      var images = [];
+      for (var k = 0; k < out.blobs.length; k++) {
+        say('מעלה עמוד ' + (k + 1) + ' מתוך ' + out.blobs.length + '…');
+        var fn = String(k + 1).padStart(2, '0') + '.jpg';
+        await put('issues/' + folder + '/' + fn, b64FromBuffer(await out.blobs[k].arrayBuffer()), 'page ' + fn + ' ' + slug);
+        images.push(fn);
+      }
+      var info = { name: name, mode: $('mode').value, dir: $('dir').value, folder: folder, images: images, width: out.width, height: out.height, updated: new Date(stamp).toISOString() };
       var cur = await gh('data/' + slug + '.json');
       await put('data/' + slug + '.json', b64FromText(JSON.stringify(info, null, 1)), 'update ' + slug, cur && cur.sha);
-      if (existing && existing.pdf !== pdfName) {
-        var old = await gh('pdfs/' + existing.pdf);
-        if (old) await del('pdfs/' + existing.pdf, old.sha, 'remove old pdf ' + slug);
-      }
+      if (existing) await removeIssue(existing);
       var url = BASE + '?s=' + slug;
       say('הועלה. ממתין שהאתר יתעדכן (בדרך כלל עד כדקה-שתיים)…');
       var ok = false;
-      for (var i = 0; i < 40 && !ok; i++) {
+      for (var i = 0; i < 60 && !ok; i++) {
         await new Promise(function (r) { setTimeout(r, 4000); });
         try {
           var a = await fetch(BASE + 'data/' + slug + '.json?t=' + Date.now(), { cache: 'no-store' });
           var j = a.ok && await a.json();
-          if (j && j.pdf === pdfName) { var b = await fetch(BASE + 'pdfs/' + pdfName, { method: 'HEAD', cache: 'no-store' }); ok = b.ok; }
+          if (j && j.folder === folder) { var b = await fetch(BASE + 'issues/' + folder + '/' + images[images.length - 1], { method: 'HEAD', cache: 'no-store' }); ok = b.ok; }
         } catch (e) {}
       }
       say(ok ? 'מוכן! הקישור: ' + url : 'הועלה, אבל האתר עוד לא התעדכן. נסו את הקישור בעוד כמה דקות: ' + url);
