@@ -70,7 +70,7 @@
       var w = st.clientWidth - 16;
       // עמוד אחד בכל פעם, גדול ככל האפשר (עד 1500px), כמו מצב ההגדלה
       var portrait = true;
-      var pageW = Math.min(w, 1500);
+      var pageW = Math.min(w, 1500, Math.max(280, (st.clientHeight - 16) * ratio));
       var pageH = pageW / ratio;
       book.style.width = (portrait ? pageW : pageW * 2) + 'px';
       book.style.height = pageH + 'px';
@@ -150,7 +150,7 @@
     $('rPrev').onclick = function () { go(false); };
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('reader').hidden) $('rClose').onclick(); });
     window.addEventListener('resize', function () { if (!$('reader').hidden) renderReader(); });
-    openReader(); // תמיד נפתחים במצב הקריאה החד (תמונות מלאות); "תצוגת ספר" סוגר אותו
+    // נפתחים בתצוגת ספר (העמוד כולו נראה, חד לפי צפיפות המסך); כפתור 🔍 פותח הגדלה לקריאה
     document.addEventListener('keydown', function (e) {
       if ($('reader').hidden) return;
       if (e.key === 'ArrowLeft') go(true);
