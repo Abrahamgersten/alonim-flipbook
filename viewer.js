@@ -68,17 +68,20 @@
       // הספר מתאים לרוחב המסך (לא לגובה), כדי שהטקסט יהיה גדול וחד; המסך גולל אנכית
       var st = $('stage');
       var w = st.clientWidth - 16;
-      var portrait = w < 700;
-      var pageW = portrait ? w : Math.min(w / 2, 1100);
+      // עמוד אחד בכל פעם, גדול ככל האפשר (עד 1500px), כמו מצב ההגדלה
+      var portrait = true;
+      var pageW = Math.min(w, 1500);
       var pageH = pageW / ratio;
       book.style.width = (portrait ? pageW : pageW * 2) + 'px';
       book.style.height = pageH + 'px';
     }
     fit();
+    // עמוד בודד תמיד: ספריית הדפדוף עוברת לתצוגת עמוד אחד כשרוחב הספר קטן מפי 2 מ-minWidth
+    var flipMin = Math.min(800, Math.floor(parseInt(book.style.width, 10) * 0.9));
 
     var flip = new St.PageFlip(book, {
       width: out.width, height: out.height,
-      size: 'stretch', minWidth: 200, maxWidth: 1600, minHeight: 280, maxHeight: 3200,
+      size: 'stretch', minWidth: flipMin, maxWidth: 1600, minHeight: 280, maxHeight: 3200,
       showCover: true, usePortrait: true, mobileScrollSupport: false,
       drawShadow: true, maxShadowOpacity: 0.45, flippingTime: 800,
       startPage: rtl ? n - 1 : 0, autoSize: true
@@ -146,7 +149,11 @@
     var t;
     window.addEventListener('resize', function () {
       clearTimeout(t);
-      t = setTimeout(function () { fit(); flip.update(); label(); }, 150);
+      t = setTimeout(function () {
+        fit();
+        if (parseInt(book.style.width, 10) >= 2 * flipMin) return location.reload();
+        flip.update(); label();
+      }, 150);
     });
   }
 
