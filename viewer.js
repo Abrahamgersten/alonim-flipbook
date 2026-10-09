@@ -132,13 +132,17 @@
       $('rZoom').textContent = Math.round(zoom * 100) + '%';
       $('rInfo').textContent = $('pageInfo').textContent;
     }
+    function toStart() { var sc = $('rScroll'); sc.scrollTo(rtl ? 0 : -sc.scrollWidth, 0); } // המסמך RTL: 0 = הקצה הימני
     function go(fwd) {
       var next = rtl ? !fwd : fwd;
       next ? flip.turnToNextPage() : flip.turnToPrevPage();
-      label(); renderReader(); $('rScroll').scrollTo(0, 0);
+      label(); renderReader(); toStart();
     }
     function setZoom(z) { zoom = Math.max(1, Math.min(3, z)); renderReader(); }
-    $('zoomBtn').onclick = function () { zoom = 1; $('reader').hidden = false; label(); renderReader(); $('rClose').focus(); };
+    // בטלפון הקנבס של ספר הדפדוף מטושטש (לא מותאם לצפיפות המסך), לכן שם נפתח ישר מצב הקריאה החד, מוגדל
+    var phone = window.innerWidth < 900;
+    function openReader() { zoom = phone ? 2 : 1; $('reader').hidden = false; label(); renderReader(); toStart(); $('rClose').focus(); }
+    $('zoomBtn').onclick = openReader;
     $('rClose').onclick = function () { $('reader').hidden = true; $('zoomBtn').focus(); };
     $('rPlus').onclick = function () { setZoom(zoom + 0.5); };
     $('rMinus').onclick = function () { setZoom(zoom - 0.5); };
@@ -146,6 +150,7 @@
     $('rPrev').onclick = function () { go(false); };
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('reader').hidden) $('rClose').onclick(); });
     window.addEventListener('resize', function () { if (!$('reader').hidden) renderReader(); });
+    if (phone) openReader();
     var t;
     window.addEventListener('resize', function () {
       clearTimeout(t);
