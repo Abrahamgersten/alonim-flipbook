@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>עלון</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="viewer">
+<header class="bar">
+  <h1 id="title">טוען…</h1>
+</header>
+<main id="stage">
+  <div id="status" class="status" role="status" aria-live="polite">
+    <div class="spinner"></div>
+    <p id="statusText">טוען את העלון…</p>
+    <div class="progress"><i id="progressBar"></i></div>
+  </div>
+  <div id="book" hidden></div>
+</main>
+<footer class="controls" id="controls" hidden>
+  <button id="prevBtn" aria-label="לעמוד הקודם">›</button>
+  <span id="pageInfo" aria-live="polite"></span>
+  <button id="nextBtn" aria-label="לעמוד הבא">‹</button>
+  <button id="fsBtn" aria-label="מסך מלא" class="ghost">⛶</button>
+</footer>
+<script src="vendor/pdf.min.js"></script>
+<script src="vendor/page-flip.browser.js"></script>
+<script src="pages.js"></script>
+<script src="viewer.js"></script>
+</body>
+</html>

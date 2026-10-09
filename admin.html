@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>ניהול עלונים</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="admin">
+<div class="wrap">
+  <h1>ניהול עלונים</h1>
+  <p class="hint">מעלים PDF לבית ספר ומקבלים קישור אישי שמדפדפים בו כמו חוברת. העלאה חדשה לאותו בית ספר מחליפה את העלון ושומרת על אותו קישור.</p>
+
+  <section class="card" id="tokenCard" hidden>
+    <h2>חיבור ראשוני</h2>
+    <p class="hint">הדביקו פעם אחת את מפתח הגישה. הוא נשמר רק בדפדפן הזה.</p>
+    <label for="token">מפתח גישה</label>
+    <input type="password" id="token" autocomplete="off">
+    <button class="btn" id="saveToken">שמירה</button>
+  </section>
+
+  <section class="card" id="uploadCard" hidden>
+    <h2 id="formTitle">עלון חדש</h2>
+    <label for="school">בית ספר</label>
+    <select id="school"></select>
+    <div id="newNameBox">
+      <label for="name">שם בית הספר (יוצג בראש העלון)</label>
+      <input type="text" id="name" placeholder="למשל: תלמוד תורה אור החיים">
+    </div>
+    <label for="mode">סוג העלון</label>
+    <select id="mode">
+      <option value="auto">זיהוי אוטומטי</option>
+      <option value="portrait">עומד (עמוד אחד בכל דף)</option>
+      <option value="landscape">שוכב (כל דף מתחלק לשני עמודים)</option>
+    </select>
+    <label for="dir">כיוון דפדוף</label>
+    <select id="dir">
+      <option value="rtl">מימין לשמאל (עברית)</option>
+      <option value="ltr">משמאל לימין</option>
+    </select>
+    <label for="file">קובץ PDF</label>
+    <input type="file" id="file" accept="application/pdf,.pdf">
+    <button class="btn" id="uploadBtn">העלאה ויצירת קישור</button>
+    <div id="msg" class="msg" hidden role="status"></div>
+  </section>
+
+  <section class="card" id="listCard" hidden>
+    <h2>בתי הספר</h2>
+    <div id="list"><p class="hint">טוען…</p></div>
+  </section>
+</div>
+<script src="admin.js"></script>
+</body>
+</html>
