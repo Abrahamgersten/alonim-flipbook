@@ -141,7 +141,7 @@
     function setZoom(z) { zoom = Math.max(1, Math.min(3, z)); renderReader(); }
     // בטלפון הקנבס של ספר הדפדוף מטושטש (לא מותאם לצפיפות המסך), לכן שם נפתח ישר מצב הקריאה החד, מוגדל
     var phone = window.innerWidth < 900;
-    function openReader() { zoom = phone ? 2 : 1; $('reader').hidden = false; label(); renderReader(); toStart(); $('rClose').focus(); }
+    function openReader() { zoom = phone ? 2 : 1.4; $('reader').hidden = false; label(); renderReader(); toStart(); $('rClose').focus(); }
     $('zoomBtn').onclick = openReader;
     $('rClose').onclick = function () { $('reader').hidden = true; $('zoomBtn').focus(); };
     $('rPlus').onclick = function () { setZoom(zoom + 0.5); };
@@ -150,7 +150,12 @@
     $('rPrev').onclick = function () { go(false); };
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('reader').hidden) $('rClose').onclick(); });
     window.addEventListener('resize', function () { if (!$('reader').hidden) renderReader(); });
-    if (phone) openReader();
+    openReader(); // תמיד נפתחים במצב הקריאה החד (תמונות מלאות); "תצוגת ספר" סוגר אותו
+    document.addEventListener('keydown', function (e) {
+      if ($('reader').hidden) return;
+      if (e.key === 'ArrowLeft') go(true);
+      if (e.key === 'ArrowRight') go(false);
+    });
     var t;
     window.addEventListener('resize', function () {
       clearTimeout(t);
