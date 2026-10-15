@@ -91,6 +91,7 @@
       var pageH = pageW / ratio;
       book.style.width = (portrait ? pageW : pageW * 2) + 'px';
       book.style.height = pageH + 'px';
+      book.style.maxWidth = (portrait ? pageW : pageW * 2) + 'px'; // הספרייה מותחת ל-100%; בלי זה נשארים פסים לבנים בצדדים כשהגובה מגביל
     }
     fit();
     // עמוד בודד תמיד: ספריית הדפדוף עוברת לתצוגת עמוד אחד כשרוחב הספר קטן מפי 2 מ-minWidth
@@ -104,6 +105,8 @@
       startPage: 0, autoSize: true, useMouseEvents: false, flippingTime: 650
     });
     flip.loadFromImages(flipPages);
+    fit(); // הספרייה כותבת סגנונות משלה על האלמנט בטעינה; מחילים שוב את מגבלת הרוחב ומעדכנים
+    flip.update();
     if (rtl) book.classList.add('mirror');
 
     function label() {
