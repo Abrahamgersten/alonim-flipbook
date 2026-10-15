@@ -55,7 +55,24 @@
     var realCount = pages.length;
     if (pages.length % 2) pages.push(blankPage());
     var n = pages.length;
-    var ordered = rtl ? pages.slice().reverse() : pages;
+    // עברית: ספר רגיל (שמאל->ימין) שמוצג בראי, עם תמונות שהופכו מראש, כך שהעמוד הקודם נקלף מהשוליים והדפדוף
+    // זהה בשני הכיוונים (קדימה = flipNext, אחורה = flipPrev, הפוך בזמן). ראו mirrorUrl.
+    async function mirrorUrl(u) {
+      if (u.indexOf('data:') === 0) return u;
+      var im = await new Promise(function (res, rej) { var x = new Image(); x.onload = function () { res(x); }; x.onerror = rej; x.src = u; });
+      var c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+      var g = c.getContext('2d'); g.translate(c.width, 0); g.scale(-1, 1); g.drawImage(im, 0, 0);
+      return new Promise(function (res) { c.toBlob(function (b) { res(URL.createObjectURL(b)); }, 'image/jpeg', 0.92); });
+    }
+    var flipPages = pages;
+    if (rtl) {
+      $('statusText').textContent = 'מכין את הדפדוף…';
+      flipPages = [];
+      for (var mi = 0; mi < pages.length; mi++) {
+        flipPages.push(await mirrorUrl(pages[mi]));
+        $('progressBar').style.width = Math.round((mi + 1) / pages.length * 100) + '%';
+      }
+    }
 
     var book = $('book');
     book.hidden = false;
@@ -83,14 +100,15 @@
       width: out.width, height: out.height,
       size: 'stretch', minWidth: flipMin, maxWidth: 1600, minHeight: 280, maxHeight: 3200,
       showCover: true, usePortrait: true, mobileScrollSupport: false,
-      drawShadow: true, maxShadowOpacity: 0.45, flippingTime: 800,
-      startPage: rtl ? n - 1 : 0, autoSize: true
+      drawShadow: true, maxShadowOpacity: 0.45,
+      startPage: 0, autoSize: true, useMouseEvents: false, flippingTime: 650
     });
-    flip.loadFromImages(ordered);
+    flip.loadFromImages(flipPages);
+    if (rtl) book.classList.add('mirror');
 
     function label() {
       var i = flip.getCurrentPageIndex();
-      var r = function (k) { return rtl ? n - k : k + 1; }; // מספר עמוד בסדר קריאה (מ-1)
+      var r = function (k) { return k + 1; }; // מספר עמוד בסדר קריאה (מ-1)
       var single = flip.getOrientation() === 'portrait' || i === 0 || i === n - 1;
       var a = r(i), b = single ? a : r(i + 1);
       var lo = Math.min(a, b), hi = Math.max(a, b);
@@ -101,8 +119,33 @@
     flip.on('changeOrientation', label);
     label();
 
-    var forward = function () { rtl ? flip.flipPrev() : flip.flipNext(); };
-    var backward = function () { rtl ? flip.flipNext() : flip.flipPrev(); };
+    var busy = false;
+    flip.on('changeState', function (e) { busy = e.data !== 'read'; });
+    var forward = function () { flip.flipNext(); };
+    var backward = function () { flip.flipPrev(); };
+    // חיצים: כיוון הדפדוף קדימה בעברית הוא שמאלה (◀), אחורה ימינה (▶). משתמשים בצורות שאינן מתהפכות ב-RTL
+    $('nextBtn').textContent = $('rNext').textContent = rtl ? '◀' : '▶';
+    $('prevBtn').textContent = $('rPrev').textContent = rtl ? '▶' : '◀';
+    document.querySelector('.rbar').dir = rtl ? 'rtl' : 'ltr';
+    // החלקה: עובדת מכל מקום בעמוד, בלי תלות בפינה. אצבע ימינה = קדימה בעברית (כמו שמושכים עמוד מהשוליים השמאליים)
+    var sx = 0, sy = 0, st0 = 0, tracking = false;
+    book.addEventListener('pointerdown', function (e) { tracking = true; sx = e.clientX; sy = e.clientY; st0 = Date.now(); });
+    function endSwipe(e) {
+      if (!tracking) return; tracking = false;
+      var dx = e.clientX - sx, dy = e.clientY - sy;
+      if (Math.abs(dx) < 30 || Math.abs(dx) < Math.abs(dy) * 1.2 || Date.now() - st0 > 900) return;
+      if (busy) return;
+      ((dx > 0) === rtl ? forward : backward)();
+    }
+    book.addEventListener('pointerup', endSwipe);
+    book.addEventListener('pointercancel', function () { tracking = false; });
+    // הקשה על העמוד: חצי שמאלי קדימה, ימני אחורה (בעברית)
+    book.addEventListener('click', function (e) {
+      if (Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10 || busy) return;
+      var r = book.getBoundingClientRect();
+      var left = (e.clientX - r.left) < r.width / 2;
+      ((left === rtl) ? forward : backward)();
+    });
     $('nextBtn').onclick = forward;
     $('prevBtn').onclick = backward;
     document.addEventListener('keydown', function (e) {
@@ -122,20 +165,20 @@
       return single ? [i] : [i, i + 1];
     }
     function renderReader() {
-      var idx = visible().filter(function (k) { return ordered[k] && ordered[k].indexOf('data:') !== 0; });
+      var idx = visible().filter(function (k) { return pages[k] && pages[k].indexOf('data:') !== 0; });
+      if (rtl) idx.reverse(); // בספר עברי מימין לשמאל: העמוד הראשון מימין
       var sc = $('rScroll');
       var base = Math.min(sc.clientWidth - 16, 1000 * idx.length) / idx.length;
       var box = $('rPages'); box.innerHTML = '';
       idx.forEach(function (k) {
-        var im = new Image(); im.src = ordered[k]; im.alt = 'עמוד'; im.style.width = Math.round(base * zoom) + 'px'; box.appendChild(im);
+        var im = new Image(); im.src = pages[k]; im.alt = 'עמוד'; im.style.width = Math.round(base * zoom) + 'px'; box.appendChild(im);
       });
       $('rZoom').textContent = Math.round(zoom * 100) + '%';
       $('rInfo').textContent = $('pageInfo').textContent;
     }
     function toStart() { var sc = $('rScroll'); sc.scrollTo(rtl ? 0 : -sc.scrollWidth, 0); } // המסמך RTL: 0 = הקצה הימני
     function go(fwd) {
-      var next = rtl ? !fwd : fwd;
-      next ? flip.turnToNextPage() : flip.turnToPrevPage();
+      fwd ? flip.turnToNextPage() : flip.turnToPrevPage();
       label(); renderReader(); toStart();
     }
     function setZoom(z) { zoom = Math.max(1, Math.min(3, z)); renderReader(); }
